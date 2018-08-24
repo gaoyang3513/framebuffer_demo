@@ -11,6 +11,10 @@
 
 #include <linux/fb.h>	// fb_var_XXX
 
+#include "draw.h"
+
+struct sBufferInformation gBufferInfo;
+
 struct sOptionalCommand {
 	bool isDumpScreen;			/* -d option */
     char **inputFiles;          /* -f option */
@@ -35,6 +39,8 @@ void showScreenInfo(struct fb_fix_screeninfo finfo, struct fb_var_screeninfo vin
 			"    yres         = %d px\n"
 			"    xres_virtual = %d px\n"
 			"    yres_virtual = %d px\n"
+			"    xoffset      = %d px\n"
+			"    yoffset      = %d px\n"
 			"    bpp          = %d\n"
 			"    r            = %2u:%u\n"
 			"    g            = %2u:%u\n"
@@ -46,6 +52,8 @@ void showScreenInfo(struct fb_fix_screeninfo finfo, struct fb_var_screeninfo vin
 			vinfo.yres,
 			vinfo.xres_virtual,
 			vinfo.yres_virtual,
+			vinfo.xoffset,
+			vinfo.yoffset,
 			vinfo.bits_per_pixel,
 			vinfo.red.offset,   vinfo.red.length,
 			vinfo.green.offset, vinfo.green.length,
@@ -109,8 +117,8 @@ int main(int argc, char ** argv)
     }
 
 	/* Get fb_fix_screeninfo */
-	struct fb_fix_screeninfo finfo;
-	ret = ioctl(fd, FBIOGET_FSCREENINFO, &finfo);
+	struct fb_fix_screeninfo fInfo;
+	ret = ioctl(fd, FBIOGET_FSCREENINFO, &fInfo);
 	if (ret < 0)
 	{
 		printf("Error: %d, Failed to get information of [fb_fix_screeninfo]\n", ret);
@@ -118,8 +126,8 @@ int main(int argc, char ** argv)
 	}
 
 	/* Get fb_var_screeninfo */
-    struct fb_var_screeninfo vinfo;
-    ret = ioctl(fd, FBIOGET_VSCREENINFO, &vinfo);
+    struct fb_var_screeninfo vInfo;
+    ret = ioctl(fd, FBIOGET_VSCREENINFO, &vInfo);
     if (ret < 0) {
 		printf("Error: %d, Failed to get information of [fb_var_screeninfo]\n", ret);
         return -errno;
@@ -127,10 +135,10 @@ int main(int argc, char ** argv)
 
 	/* Show the information of screen */
 	if (cmd.isDumpScreen)
-		showScreenInfo(finfo, vinfo);
+		showScreenInfo(fInfo, vInfo);
 
 	/* Map the framebuffer */
-	size_t fbSize = round_up_to_page_size(finfo.line_length * vinfo.yres_virtual);
+	size_t fbSize = round_up_to_page_size(fInfo.line_length * vInfo.yres_virtual);
 	void* vaddr = mmap(0, fbSize, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 	if (vaddr == MAP_FAILED)
 	{
@@ -138,8 +146,22 @@ int main(int argc, char ** argv)
 		return -errno;
 	}
 
+//	printf("Buffer virtual address: 0x%p\n", vaddr);	
 	/* Clear fb */
-	memset(vaddr, 0xff, fbSize);
+	memset(vaddr, 0, fbSize);
+
+	gBufferInfo.xres = vInfo.xres;
+	gBufferInfo.yres = vInfo.yres;
+	gBufferInfo.bpp  = vInfo.bits_per_pixel; 	
+	gBufferInfo.base = (char *)vaddr;
+	drawInit(gBufferInfo);
+
+	/* A-[31:24], B-[23:16], G-[15:8], R-[7:0] */
+	unsigned int color = 0x000000ff;
+	struct position start = { 0 , 0  };
+	struct position end   = { vInfo.xres/2, vInfo.yres/2 };
+	
+	drawLine(start, end, color);
 
 	munmap(vaddr, fbSize);
     close(fd);
