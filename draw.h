@@ -21,3 +21,5 @@ struct position {
 int drawInit(struct sBufferInformation buf);
 int drawPixel(unsigned int x, unsigned int y, unsigned int color);
 int drawLine(struct position start, struct position end, unsigned int color);
+int drawRect(struct position upLeft, struct position lowRight,
+			unsigned int color);

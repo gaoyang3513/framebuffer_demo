@@ -158,10 +158,14 @@ int main(int argc, char ** argv)
 
 	/* A-[31:24], B-[23:16], G-[15:8], R-[7:0] */
 	unsigned int color = 0x000000ff;
-	struct position start = { 0 , 0  };
-	struct position end   = { vInfo.xres/2, vInfo.yres/2 };
+	struct position start = { 10 , 10 };
+	struct position end   = { 110, 110 };
 	
 	drawLine(start, end, color);
+
+	start.x = 110; start.y = 110;
+	end.x   = 210, end.y   = 210;
+	drawRect(start, end, color);
 
 	munmap(vaddr, fbSize);
     close(fd);

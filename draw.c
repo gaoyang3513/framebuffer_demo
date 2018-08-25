@@ -1,3 +1,4 @@
+#include <stdlib.h> // ads
 #include <stdio.h>	// printf
 #include <string.h>	// memcpy
 
@@ -37,21 +38,38 @@ int drawLine(struct position start, struct position end, unsigned int color)
 			(color >> 8*3) & 0xff, (color >> 8*2) & 0xff,
 			(color >> 8*1) & 0xff, (color >> 8*0) & 0xff);
 */
-	xOff = end.x - start.x;
-	yOff = end.y - start.y;
-	k = yOff/xOff;
-	e = -0.5;
-	
-	x = start.x;
-	y = start.y; 
+// void bresenham(int x0, int y0, int x1, int y1) {
+	int dx = abs(end.x - start.x);
+	int sx = start.x < end.x ? 1 : -1;
+	int dy = abs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
+	int err = (dx > dy ? dx : -dy) / 2;
 
-    for ( i = 0; i < yOff; i++ ) {
-		drawPixel ( x, y, color ); 
-        x = x + 1;
-		e = e + k; 
-        if (e >= 0) { 
-			y = y + 1;
-			e = e - 1;
-		} 
-    } 
-} 
+	while (start.x != end.x || start.y != end.y) {
+		drawPixel ( start.x, start.y, color );
+		if (err > -dx) { err -= dy; start.x += sx; }
+		if (err <  dy) { err += dx; start.y += sy; }
+	}
+}
+
+int drawRect(struct position upLeft, struct position lowRight,
+			unsigned int color)
+{
+	unsigned int index, yOffset;
+
+	if ( upLeft.x <= lowRight.x && upLeft.y<= lowRight.y ) {
+		yOffset = lowRight.y - upLeft.y;
+		for (index = 0; index < yOffset; index++ ) {
+			upLeft.y = upLeft.y + 1;
+			lowRight.y =  upLeft.y;
+			drawLine(upLeft, lowRight, color);
+			printf("Info: Draw line[%4d, %4d]-[%4d, %4d]\n",
+						upLeft.x, upLeft.y,
+						lowRight.x, lowRight.y);
+		}
+	}
+	else {
+		printf("Error: Invalible position upLeft[%4d, %4d], lowRight[%4d, %4d]\n",
+					upLeft.x, upLeft.y,
+					lowRight.x, lowRight.y);
+	}
+}
