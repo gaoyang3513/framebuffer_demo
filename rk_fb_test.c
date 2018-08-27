@@ -1,3 +1,4 @@
+#include <pthread.h>    // pthread_create
 #include <math.h>		// sin, cos, M_PI
 #include <ctype.h>		// isprint
 #include <stdlib.h>		// exit
@@ -93,11 +94,29 @@ static size_t round_up_to_page_size(size_t size)
 {
 	size_t remainder;
 	long pageSize;
-	
+
 	pageSize = sysconf(_SC_PAGESIZE);
 	remainder = (size + (pageSize - 1)) & ~(pageSize - 1);
-	
+
 	return remainder;
+}
+
+int moveable_dot_func (unsigned int * msg)
+{
+	struct position start, end;
+	unsigned int speed, dotColor, bgColor;
+
+	speed    = msg[0];
+	start.x  = msg[1];
+	start.y  = msg[2];
+	end.x    = msg[3];
+	end.y    = msg[4];
+	dotColor = msg[5];
+	bgColor  = msg[6];
+
+	printf("Info: Draw moveable dot(%d, %d, %d, %d, %d, 0x%8.8x, 0x%8.8x)\n",
+		speed, start.x, start.y, end.x, end.y, dotColor, bgColor);
+	moveDot(speed, start, end, dotColor, bgColor);
 }
 
 int main(int argc, char ** argv)
@@ -185,9 +204,21 @@ int main(int argc, char ** argv)
 	drawRect(start, end, color);
 
 	/* animation moveable dot */
-	start.x = 0; start.y = 1024;
-	end.x   = 1536, end.y   = 2047;
-	moveDot(5, start, end, 0xffffff, 0x00);
+	int speed = 5;
+	start.x = 0;	start.y = 1024;
+	end.x   = 1536; end.y   = 2048;
+	unsigned int dotColor = 0x00ffffff;
+	unsigned int bgColor  = 0x00000000;
+	unsigned int message[] = {speed, start.x, start.y, end.x, end.y, dotColor, bgColor};
+
+	pthread_t thread;
+	ret = pthread_create(&thread, NULL, (void *)&moveable_dot_func, (void *)message);
+	if(ret == 0)
+		printf("Info: Success to create thread: moveable_dot\n");
+	else
+		printf("Erro: Fail to create thread: moveable_dor\n");
+
+	while(true);
 
 	munmap(vaddr, fbSize);
     close(fd);

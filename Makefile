@@ -23,7 +23,7 @@ target = FB_Demo
 source = draw.c rk_fb_test.c
 
 $(target): $(source)
-	$(cc) $(source) -lm -static -o $(target)
+	$(cc) $(source) -lm -lpthread -static -o $(target)
 
 .PHONY: clean
 
