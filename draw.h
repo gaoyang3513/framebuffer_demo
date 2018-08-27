@@ -18,8 +18,14 @@ struct position {
 	unsigned int y;		/* y offset    */
 };
 
+int clearWithColor(unsigned int color);
 int drawInit(struct sBufferInformation buf);
 int drawPixel(unsigned int x, unsigned int y, unsigned int color);
 int drawLine(struct position start, struct position end, unsigned int color);
 int drawRect(struct position upLeft, struct position lowRight,
 			unsigned int color);
+
+
+int moveDot(unsigned int speed,
+			struct position upLeft, struct position lowRight,
+			unsigned int dotColor, unsigned int backgroundColor);

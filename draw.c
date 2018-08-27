@@ -1,6 +1,9 @@
-#include <stdlib.h> // ads
-#include <stdio.h>	// printf
-#include <string.h>	// memcpy
+#include <math.h>       // sin, cos, M_PI
+#include <unistd.h>     // close, usleep
+#include <stdlib.h>     // ads
+#include <stdio.h>      // printf
+#include <stdbool.h>    // bool
+#include <string.h>     // memcpy
 
 #include "draw.h"
 
@@ -10,6 +13,14 @@ int drawInit(struct sBufferInformation buf)
 {
 	memset(&buffer, 0, sizeof(buffer));
 	memcpy(&buffer, &buf, sizeof(buf));
+}
+
+int clearWithColor(unsigned int color)
+{
+	struct position upLeft = { 0, 0 };
+	struct position lowRight = { buffer.xres, buffer.yres };
+
+	drawRect(upLeft, lowRight, color);
 }
 
 int drawPixel(unsigned int x, unsigned int y, unsigned int color)
@@ -62,14 +73,46 @@ int drawRect(struct position upLeft, struct position lowRight,
 			upLeft.y = upLeft.y + 1;
 			lowRight.y =  upLeft.y;
 			drawLine(upLeft, lowRight, color);
-			printf("Info: Draw line[%4d, %4d]-[%4d, %4d]\n",
-						upLeft.x, upLeft.y,
-						lowRight.x, lowRight.y);
+//			printf("Info: Draw line[%4d, %4d]-[%4d, %4d]\n",
+//						upLeft.x, upLeft.y,
+//						lowRight.x, lowRight.y);
 		}
 	}
 	else {
 		printf("Error: Invalible position upLeft[%4d, %4d], lowRight[%4d, %4d]\n",
 					upLeft.x, upLeft.y,
 					lowRight.x, lowRight.y);
+	}
+}
+
+int moveDot(unsigned int speed,
+			struct position upLeft, struct position lowRight,
+			unsigned int dotColor, unsigned int backgroundColor)
+{
+    struct position moveDot;
+    float x, y;
+    float angle = 120.0f;
+    struct position tmp;
+
+	if (upLeft.x > lowRight.x || upLeft.y > lowRight.y) {
+		printf("Error: Invaliable position\n");
+		return -1;
+	}
+
+	x = (upLeft.x + lowRight.x) / 2;
+	y = (upLeft.y + lowRight.y) / 2;
+	while (true) {
+		drawRect(upLeft, lowRight, backgroundColor);
+
+		x += speed * sin(angle / 180 * M_PI);
+		y -= speed * cos(angle / 180 * M_PI);
+
+		if ( x < upLeft.x || x > lowRight.x ) angle = 360 - angle;
+		if ( y < upLeft.y || y > lowRight.y ) angle = 180 - angle;
+		tmp.x = (unsigned int) x;
+		tmp.y = (unsigned int) y;
+//      printf("Info: Moveable dot[%4.2f, %4.2f],period=%f\n", x, y, period);
+		drawPixel((unsigned int) x, (unsigned int) y, dotColor);
+		usleep(1000);
 	}
 }

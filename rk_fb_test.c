@@ -1,10 +1,11 @@
+#include <math.h>		// sin, cos, M_PI
 #include <ctype.h>		// isprint
 #include <stdlib.h>		// exit
 #include <stdio.h>		// printf
 #include <fcntl.h>		// open
 #include <stdbool.h>	// bool
 #include <sys/mman.h>	// mmap
-#include <unistd.h>		// close
+#include <unistd.h>		// close, usleep
 #include <string.h>		// strerror 
 #include <errno.h>		// errno
 #include <sys/ioctl.h>	// ioctl
@@ -60,7 +61,6 @@ void showScreenInfo(struct fb_fix_screeninfo finfo, struct fb_var_screeninfo vin
 			vinfo.blue.offset,  vinfo.blue.length,
 			vinfo.nonstd);
 }
-
 
 struct sOptionalCommand pareOptionalArg(int argc, char **argv)
 {
@@ -156,16 +156,38 @@ int main(int argc, char ** argv)
 	gBufferInfo.base = (char *)vaddr;
 	drawInit(gBufferInfo);
 
+	clearWithColor(0x00ffffff);
+
 	/* A-[31:24], B-[23:16], G-[15:8], R-[7:0] */
 	unsigned int color = 0x000000ff;
-	struct position start = { 10 , 10 };
-	struct position end   = { 110, 110 };
+	struct position start = { 0 , 0 };
+	struct position end   = { 100, 100 };
 	
+	/* draw a line */
 	drawLine(start, end, color);
 
-	start.x = 110; start.y = 110;
-	end.x   = 210, end.y   = 210;
+	/* draw a rectangle */
+	color = 0x000000ff;
+	start.x = 100; start.y = 100;
+	end.x   = 200, end.y   = 200;
 	drawRect(start, end, color);
+
+	/* draw a rectangle */
+	color = 0x0000ff00;
+	start.x = 200; start.y = 200;
+	end.x   = 300, end.y   = 300;
+	drawRect(start, end, color);
+
+	/* draw a rectangle */
+	color = 0x00ff0000;
+	start.x = 300; start.y = 300;
+	end.x   = 400, end.y   = 400;
+	drawRect(start, end, color);
+
+	/* animation moveable dot */
+	start.x = 0; start.y = 1024;
+	end.x   = 1536, end.y   = 2047;
+	moveDot(5, start, end, 0xffffff, 0x00);
 
 	munmap(vaddr, fbSize);
     close(fd);

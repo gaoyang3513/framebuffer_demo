@@ -13,11 +13,9 @@
 #clean :
 #	rm -f *.o rk_fb_test
 
-
 # Mode 1
 #FB_Test: draw.c rk_fb_test.c
 #	arm-linux-gnueabi-gcc draw.c rk_fb_test.c -o FB_Test
-#
 
 # Mode 2
 cc = arm-linux-gnueabi-gcc
@@ -25,7 +23,7 @@ target = FB_Demo
 source = draw.c rk_fb_test.c
 
 $(target): $(source)
-	$(cc) $(source) -static -o $(target)
+	$(cc) $(source) -lm -static -o $(target)
 
 .PHONY: clean
 
